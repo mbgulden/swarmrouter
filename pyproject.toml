@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "swarmrouter"
+version = "0.1.0"
+description = "Deterministic capability, token cost, and model routing kernel for AI agent swarms."
+readme = "README.md"
+authors = [{ name = "Michael Gulden", email = "mbgulden@gmail.com" }]
+license = "MIT"
+requires-python = ">=3.10"
+keywords = ["router", "llm", "swarm", "agent", "token-budget", "model-routing", "fastapi"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+dependencies = []
+
+[project.optional-dependencies]
+fastapi = ["fastapi>=0.100"]
+
+[project.scripts]
+swarmrouter = "swarmrouter.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/mbgulden/swarmrouter"
+Repository = "https://github.com/mbgulden/swarmrouter.git"
+Changelog = "https://github.com/mbgulden/swarmrouter/blob/main/CHANGELOG.md"
+
+[tool.setuptools.package-data]
+swarmrouter = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
