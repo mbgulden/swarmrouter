@@ -1,43 +1,43 @@
 """SwarmRouter — Deterministic capability, token cost, and model routing kernel for AI agent swarms."""
 
-from .models import (
-    ModelTier,
-    AgentPersona,
-    TaskRequest,
-    RouteDecision,
-    CostEstimate,
-)
-from .taxonomy import (
-    infer_domains,
-    compute_complexity_score,
-    infer_capabilities,
-)
 from .budget import (
     DEFAULT_MODEL_CATALOG,
-    estimate_token_count,
     estimate_cost,
+    estimate_token_count,
     select_model_for_task,
 )
+from .models import (
+    AgentPersona,
+    CostEstimate,
+    ModelTier,
+    RouteDecision,
+    TaskRequest,
+)
 from .router import (
-    SwarmRouter,
     DEFAULT_AGENT_PERSONAS,
+    SwarmRouter,
+)
+from .taxonomy import (
+    compute_complexity_score,
+    infer_capabilities,
+    infer_domains,
 )
 
 __version__ = "0.1.0"
 
 __all__ = [
-    "ModelTier",
-    "AgentPersona",
-    "TaskRequest",
-    "RouteDecision",
-    "CostEstimate",
-    "SwarmRouter",
-    "DEFAULT_MODEL_CATALOG",
     "DEFAULT_AGENT_PERSONAS",
-    "infer_domains",
+    "DEFAULT_MODEL_CATALOG",
+    "AgentPersona",
+    "CostEstimate",
+    "ModelTier",
+    "RouteDecision",
+    "SwarmRouter",
+    "TaskRequest",
     "compute_complexity_score",
-    "infer_capabilities",
-    "estimate_token_count",
     "estimate_cost",
+    "estimate_token_count",
+    "infer_capabilities",
+    "infer_domains",
     "select_model_for_task",
 ]
