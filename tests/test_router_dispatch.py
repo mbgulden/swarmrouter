@@ -6,9 +6,16 @@ import asyncio
 import tempfile
 import time
 from pathlib import Path
+
 import pytest
 
-from prismatic.hypervisor import PrismaticHypervisor
+try:
+    from prismatic.hypervisor import PrismaticHypervisor
+
+    HAS_PRISMATIC = True
+except ImportError:
+    HAS_PRISMATIC = False
+
 from swarmrouter.analyzer import LockScopeAnalyzer, RoutedTask
 from swarmrouter.dispatcher import TopologicalDispatcher
 
@@ -36,6 +43,7 @@ def test_lock_scope_analyzer_disjoint_vs_conflict():
     assert len(waves_conflicting[1].tasks) == 1
 
 
+@pytest.mark.skipif(not HAS_PRISMATIC, reason="prismatic not installed")
 def test_topological_dispatcher_parallel_execution():
     async def _run():
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -72,6 +80,7 @@ def test_topological_dispatcher_parallel_execution():
     asyncio.run(_run())
 
 
+@pytest.mark.skipif(not HAS_PRISMATIC, reason="prismatic not installed")
 def test_topological_dispatcher_serializes_conflicts():
     async def _run():
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -97,5 +106,48 @@ def test_topological_dispatcher_serializes_conflicts():
             assert len(results) == 2
             # Verify strict sequential execution
             assert history == ["start_t_write_1", "end_t_write_1", "start_t_write_2", "end_t_write_2"]
+
+    asyncio.run(_run())
+
+class _FakeTx:
+    tx_id = "tx-fake"
+    fence_token = 42
+
+
+class _FakeTransaction:
+    async def __aenter__(self):
+        return _FakeTx()
+
+    async def __aexit__(self, *exc):
+        return False
+
+
+class _FakeHypervisor:
+    def transaction(self, **kwargs):
+        return _FakeTransaction()
+
+
+def test_dispatcher_raises_without_hypervisor_or_prismatic() -> None:
+    if HAS_PRISMATIC:
+        pytest.skip("prismatic installed; default-hypervisor path is available")
+    with pytest.raises(RuntimeError, match="requires a hypervisor"):
+        TopologicalDispatcher()
+
+
+def test_dispatcher_dispatches_with_injected_hypervisor() -> None:
+    async def _run():
+        dispatcher = TopologicalDispatcher(hypervisor=_FakeHypervisor())
+        tasks = [
+            RoutedTask(task_id=f"t_{i}", resources=[f"file:src/mod_{i}.py"], mode="X")
+            for i in range(3)
+        ]
+
+        async def worker(tx, task):
+            return f"done_{task.task_id}"
+
+        results = await dispatcher.dispatch_waves(tasks, worker)
+        assert len(results) == 3
+        assert all(r["status"] == "COMPLETED" for r in results)
+        assert all(r["fence_token"] == 42 for r in results)
 
     asyncio.run(_run())
