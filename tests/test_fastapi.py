@@ -1,11 +1,13 @@
 """tests/test_fastapi.py — Tests for SwarmRouter FastAPI router endpoints."""
 
 import pytest
+
 from swarmrouter.router import SwarmRouter
 
 try:
     from fastapi import FastAPI, Header, HTTPException
     from fastapi.testclient import TestClient
+
     from swarmrouter.fastapi_router import create_router
     HAS_FASTAPI = True
 except ImportError:
