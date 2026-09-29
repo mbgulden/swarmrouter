@@ -7,27 +7,27 @@ maximally parallel disjoint execution waves vs serialized dependency chains.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Set
+from typing import Any
 
-from swarmlock.hierarchy import LockMode, ResourceKey
+from swarmlock.hierarchy import ResourceKey
 
 
 @dataclass
 class RoutedTask:
     task_id: str
-    resources: List[str]
+    resources: list[str]
     mode: str = "X"  # "X" (Exclusive write) or "S" (Shared read)
     agent_id: str = "agent"
-    payload: Dict[str, Any] = field(default_factory=dict)
+    payload: dict[str, Any] = field(default_factory=dict)
 
-    def get_resource_keys(self) -> List[ResourceKey]:
+    def get_resource_keys(self) -> list[ResourceKey]:
         return [ResourceKey.parse(r) for r in self.resources]
 
 
 @dataclass
 class ExecutionWave:
     wave_index: int
-    tasks: List[RoutedTask] = field(default_factory=list)
+    tasks: list[RoutedTask] = field(default_factory=list)
 
 
 class LockScopeAnalyzer:
@@ -49,25 +49,24 @@ class LockScopeAnalyzer:
                     kb.path.startswith(ka.path.rstrip("/") + "/") or
                     ka.path.startswith(kb.path.rstrip("/") + "/")
                 )
-                if is_overlap:
+                if is_overlap and (task_a.mode == "X" or task_b.mode == "X"):
                     # If either task requires Exclusive (X) lock, they conflict
-                    if task_a.mode == "X" or task_b.mode == "X":
-                        return True
+                    return True
         return False
 
     @classmethod
-    def schedule_waves(cls, tasks: List[RoutedTask]) -> List[ExecutionWave]:
+    def schedule_waves(cls, tasks: list[RoutedTask]) -> list[ExecutionWave]:
         """
         Greedily groups tasks into conflict-free parallel execution waves.
         Tasks in the same wave can be dispatched concurrently without lock contention.
         """
-        waves: List[ExecutionWave] = []
+        waves: list[ExecutionWave] = []
         remaining_tasks = list(tasks)
 
         wave_idx = 0
         while remaining_tasks:
-            current_wave_tasks: List[RoutedTask] = []
-            next_remaining: List[RoutedTask] = []
+            current_wave_tasks: list[RoutedTask] = []
+            next_remaining: list[RoutedTask] = []
 
             for task in remaining_tasks:
                 # Check if this task conflicts with any task already placed in current wave

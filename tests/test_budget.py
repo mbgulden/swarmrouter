@@ -2,11 +2,10 @@
 
 from swarmrouter.budget import (
     DEFAULT_MODEL_CATALOG,
-    estimate_token_count,
     estimate_cost,
+    estimate_token_count,
     select_model_for_task,
 )
-from swarmrouter.models import ModelTier
 
 
 def test_estimate_token_count() -> None:

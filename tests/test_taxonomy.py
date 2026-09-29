@@ -1,9 +1,9 @@
 """tests/test_taxonomy.py — Tests for domain inference and complexity scoring."""
 
 from swarmrouter.taxonomy import (
-    infer_domains,
     compute_complexity_score,
     infer_capabilities,
+    infer_domains,
 )
 
 

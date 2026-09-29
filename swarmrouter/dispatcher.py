@@ -8,10 +8,15 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, Callable, Dict, List, Optional
+from collections.abc import Callable
+from typing import Any
 
-from prismatic.hypervisor import PrismaticHypervisor
-from swarmrouter.analyzer import ExecutionWave, LockScopeAnalyzer, RoutedTask
+from swarmrouter.analyzer import LockScopeAnalyzer, RoutedTask
+
+try:
+    from prismatic.hypervisor import PrismaticHypervisor
+except ImportError:  # pragma: no cover - optional integration dependency
+    PrismaticHypervisor = None  # type: ignore[assignment]
 
 logger = logging.getLogger("swarmrouter.dispatcher")
 
@@ -21,14 +26,22 @@ class TopologicalDispatcher:
     Orchestrates wave-based parallel dispatch across worker tasks.
     """
 
-    def __init__(self, hypervisor: Optional[PrismaticHypervisor] = None):
-        self.hypervisor = hypervisor or PrismaticHypervisor()
+    def __init__(self, hypervisor: PrismaticHypervisor | None = None):  # type: ignore[valid-type]
+        if hypervisor is None:
+            if PrismaticHypervisor is None:
+                raise RuntimeError(
+                    "TopologicalDispatcher requires a hypervisor: the optional "
+                    "'prismatic' integration package is not installed. Pass a "
+                    "hypervisor explicitly or install the prismatic package."
+                )
+            hypervisor = PrismaticHypervisor()
+        self.hypervisor = hypervisor
 
     async def dispatch_task(
         self,
         task: RoutedTask,
         worker_fn: Callable[[Any, RoutedTask], Any]
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Dispatches an individual task inside an isolated hypervisor transaction."""
         primary_resource = task.resources[0] if task.resources else "file:default.py"
         
@@ -49,14 +62,14 @@ class TopologicalDispatcher:
 
     async def dispatch_waves(
         self,
-        tasks: List[RoutedTask],
+        tasks: list[RoutedTask],
         worker_fn: Callable[[Any, RoutedTask], Any]
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Computes waves and executes each wave in parallel, serializing across conflicting waves.
         """
         waves = LockScopeAnalyzer.schedule_waves(tasks)
-        all_results: List[Dict[str, Any]] = []
+        all_results: list[dict[str, Any]] = []
 
         for wave in waves:
             logger.info("Executing Wave %d with %d tasks in parallel", wave.wave_index, len(wave.tasks))

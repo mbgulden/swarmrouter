@@ -3,21 +3,21 @@
 from __future__ import annotations
 
 import uuid
-from typing import Sequence
+from collections.abc import Sequence
 
-from .models import (
-    AgentPersona,
-    ModelTier,
-    TaskRequest,
-    RouteDecision,
-    CostEstimate,
-)
-from .taxonomy import infer_domains, compute_complexity_score, infer_capabilities
 from .budget import (
     DEFAULT_MODEL_CATALOG,
     estimate_cost,
     select_model_for_task,
 )
+from .models import (
+    AgentPersona,
+    CostEstimate,
+    ModelTier,
+    RouteDecision,
+    TaskRequest,
+)
+from .taxonomy import compute_complexity_score, infer_capabilities, infer_domains
 
 # Standard default agent personas
 DEFAULT_AGENT_PERSONAS: list[AgentPersona] = [
@@ -129,7 +129,7 @@ class SwarmRouter:
 
         if not suitable_agents:
             # Fallback to agy (general default) or first available persona
-            chosen_agent = self.personas.get("agy") or list(self.personas.values())[0]
+            chosen_agent = self.personas.get("agy") or next(iter(self.personas.values()))
         else:
             # Prefer agent specialized in primary domain
             specialized = [a for a in suitable_agents if primary_domain in a.domains]

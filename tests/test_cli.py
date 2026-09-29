@@ -1,6 +1,7 @@
 """tests/test_cli.py — Tests for SwarmRouter CLI commands."""
 
 import json
+
 from swarmrouter.cli import main
 
 

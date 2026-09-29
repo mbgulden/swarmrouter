@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Annotated, Any
 
 from .models import TaskRequest
 from .router import SwarmRouter
@@ -30,27 +30,27 @@ def create_router(
     router = APIRouter(prefix="/router", tags=["SwarmRouter"], dependencies=dependencies)
 
     @router.get("/agents")
-    def get_agents() -> Dict[str, Any]:
+    def get_agents() -> dict[str, Any]:
         """List all available agent personas."""
         return {"ok": True, "agents": [a.to_dict() for a in engine.list_agents()]}
 
     @router.get("/models")
-    def get_models() -> Dict[str, Any]:
+    def get_models() -> dict[str, Any]:
         """List all registered model tiers and pricing."""
         return {"ok": True, "models": [m.to_dict() for m in engine.list_models()]}
 
     @router.post("/route")
-    def route_task(payload: Dict[str, Any] = Body(...)) -> Dict[str, Any]:
+    def route_task(payload: Annotated[dict[str, Any], Body()]) -> dict[str, Any]:
         """Route a task to the optimal agent persona and model tier."""
         try:
             req = TaskRequest.from_dict(payload)
             decision = engine.route(req)
             return {"ok": True, "decision": decision.to_dict()}
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 - map any routing error to HTTP 400
             raise HTTPException(status_code=400, detail=str(exc))
 
     @router.post("/estimate")
-    def estimate_tokens(payload: Dict[str, Any] = Body(...)) -> Dict[str, Any]:
+    def estimate_tokens(payload: Annotated[dict[str, Any], Body()]) -> dict[str, Any]:
         """Estimate token cost for a prompt."""
         prompt = payload.get("prompt", "")
         model_id = payload.get("model_id", "gemini-flash")
@@ -60,7 +60,7 @@ def create_router(
             return {"ok": True, "estimate": est.to_dict()}
         except KeyError:
             raise HTTPException(status_code=404, detail=f"Model tier not found: {model_id}")
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 - map any estimation error to HTTP 400
             raise HTTPException(status_code=400, detail=str(exc))
 
     return router
