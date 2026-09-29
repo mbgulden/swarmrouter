@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Sequence
-from .models import ModelTier, CostEstimate
+from collections.abc import Sequence
+
+from .models import CostEstimate, ModelTier
 
 # Standard default model tier catalog
 DEFAULT_MODEL_CATALOG: list[ModelTier] = [
