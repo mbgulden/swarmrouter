@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from typing import Sequence
+from collections.abc import Sequence
 
 # Domain keyword markers
 DOMAIN_KEYWORDS: dict[str, list[str]] = {
@@ -130,4 +130,4 @@ def infer_capabilities(text: str, labels: Sequence[str] = ()) -> list[str]:
     if any(k in full_text for k in ["cuda", "ollama", "vllm", "gpu", "vram"]):
         caps.add("gpu")
 
-    return sorted(list(caps))
+    return sorted(caps)
